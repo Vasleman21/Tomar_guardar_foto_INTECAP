@@ -13,6 +13,7 @@ import androidx.core.view.WindowInsetsCompat
 import android.Manifest
 import android.app.Activity
 import android.app.ComponentCaller
+import android.content.ContentValues
 import android.content.Intent
 import android.net.Uri
 import android.os.Environment
@@ -36,6 +37,10 @@ class MainActivity : AppCompatActivity() {
     lateinit var cajaFotos: LinearLayout
     //Creamos la variable que tendra la ruta de la fotografia
     var ubicacionFoto: String? = null
+
+    //Preparamos la conexion a la base de datos
+    private lateinit var conexionBD: BaseDeDatos
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -47,6 +52,8 @@ class MainActivity : AppCompatActivity() {
         }
         //Enlazamos el objeto cajaFotos a la interfaz grafica
         cajaFotos = findViewById(R.id.cajaFotosGuardar)
+        //Inicia la conexion a la base de datos
+        conexionBD = BaseDeDatos(this)
     }
     /*Creamos la funcion para tomar la fotografia, pero primero se deben validar los permisos
     del android manifest*/
@@ -145,6 +152,22 @@ class MainActivity : AppCompatActivity() {
             nuevaImagen.scaleType = ImageView.ScaleType.CENTER_CROP
             //Añadimos la nueva imagen al LinearLayout
             cajaFotos.addView(nuevaImagen)
+
+            //----AQUI EMPIEZA LA BASE DE DATOS----
+
+            //Abrimos el archivo en modo escritura
+            val accionInsertar = conexionBD.writableDatabase
+
+            //Sacamos la fecha y hora
+            val fechaActual = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
+
+            //Empaquetamos los datos (ubicacion y fecha)
+            val datosFoto = ContentValues()
+            datosFoto.put("ubicacionFoto", ubicacionFoto)
+            datosFoto.put("fechaTomaRegistro", fechaActual)
+
+            //Mandamos el insert a la tabla "fotos"
+            val resultado = accionInsertar.insert("fotos", null, datosFoto)
         }
     }
 }
